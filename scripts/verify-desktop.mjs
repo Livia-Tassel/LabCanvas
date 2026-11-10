@@ -7,7 +7,8 @@ let application;
 try {
   const artifact = JSON.parse(await readFile('release/artifact.json', 'utf8'));
   const executablePath = path.join(artifact.app_path, 'Contents', 'MacOS', 'LabCanvas');
-  application = await electron.launch({ executablePath, env: { ...process.env, LABCANVAS_HOME: home }, timeout: 30000 });
+  application = await electron.launch({ executablePath, env: { ...process.env, LABCANVAS_HOME: home, LABCANVAS_PROFILE: path.join(home, 'profile') }, timeout: 30000 });
+  application.process().stderr.on('data', chunk => console.error(String(chunk).trim()));
   const errors = []; const page = await application.firstWindow(); page.on('pageerror', e => errors.push(e.message));
   page.on('console', message => { if (message.type() === 'error') console.error('renderer:', message.text()); });
   page.on('response', response => { if (response.status() >= 400) console.error(response.status(), response.url()); });
@@ -22,11 +23,26 @@ try {
   await page.getByRole('button', { name: '关闭对话框', exact: true }).click();
   await page.getByRole('button', { name: '适应全部资料', exact: true }).click(); await page.screenshot({ path: 'docs/screenshot-desktop.png' });
   await page.getByRole('button', { name: '列表视图', exact: true }).click(); await page.screenshot({ path: 'docs/screenshot-list.png' });
+  for (const name of ['缓存与预取消融', '扩展性测试', '实验笔记']) await page.getByLabel(`选择 ${name}`, { exact: true }).check();
+  await page.getByRole('button', { name: '组合', exact: true }).click();
+  const combinationDialog = page.getByRole('dialog', { name: '创建结果组合', exact: true });
+  const picker = combinationDialog.getByRole('group', { name: '加入分类', exact: true });
+  await expect(picker.getByRole('checkbox')).toHaveCount(6);
+  for (const size of await picker.getByRole('checkbox').evaluateAll(inputs => inputs.map(input => { const r=input.getBoundingClientRect(); return {width:r.width,height:r.height}; }))) {
+    expect(size.width).toBeLessThanOrEqual(24); expect(size.height).toBeLessThanOrEqual(24);
+  }
+  await expect.poll(() => picker.locator('.collection-checks').evaluate(el => el.scrollWidth - el.clientWidth)).toBeLessThanOrEqual(1);
+  await picker.getByRole('checkbox', { name: '基准对比', exact: true }).check();
+  await expect(picker.getByRole('checkbox', { name: '基准对比', exact: true })).toBeChecked();
+  await combinationDialog.screenshot({ path: 'docs/screenshot-group-dialog.png' });
+  await combinationDialog.getByRole('button', { name: '取消', exact: true }).click();
+  await page.getByRole('button', { name: '取消选择', exact: true }).click();
   const snapshot = await fetch(`${url}api/projects/${project.id}/snapshot`).then(r => r.json());
   const group = snapshot.groups.find(g => g.title.startsWith('吞吐量'));
   await page.getByTestId(`row-${group.id}`).dblclick(); await page.locator('.group-tabs').getByRole('button', { name: '吞吐量对比', exact: true }).click();
   await expect(page.getByRole('grid')).toBeVisible(); await page.screenshot({ path: 'docs/screenshot-table.png' });
   await page.locator('[data-cell="1:1"]').click(); await page.getByLabel('单元格内容', { exact: true }).fill('200.5');
+  await expect(page.locator('.unsaved-dot')).toBeVisible();
   // Cancel a native close while dirty; the app and its database must stay usable.
   await application.evaluate(({ BrowserWindow, dialog }) => { dialog.showMessageBoxSync = () => 0; BrowserWindow.getAllWindows()[0].close(); });
   await expect(page.getByRole('grid')).toBeVisible();
@@ -41,9 +57,10 @@ try {
   await expect.poll(() => page.locator('.pdf-canvas').evaluate(c => { if (!c.width || !c.height) return 0; const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; let n = 0; for (let i = 0; i < d.length; i += 4) if (d[i] < 180 && d[i+1] < 180 && d[i+2] < 180 && d[i+3] > 200) n++; return n; }), { timeout: 15000 }).toBeGreaterThan(500);
   await page.screenshot({ path: 'docs/screenshot-pdf.png' });
   if (errors.length) throw new Error(errors.join('\n'));
-  const report = { ...info, ok: true, checked_at: new Date().toISOString(), checks: ['packaged startup', 'native menu IPC', 'real image previews', 'bundled agent documentation', 'XLSX editing', 'cancel native close with unsaved data', 'time-based logs', 'built-in PDF rendering'], page_errors: errors };
+  const report = { ...info, ok: true, checked_at: new Date().toISOString(), checks: ['packaged startup', 'native menu IPC', 'real image previews', 'bundled agent documentation', 'XLSX editing', 'cancel native close with unsaved data', 'time-based logs', 'built-in PDF rendering', 'compact classification pickers'], page_errors: errors };
   await writeFile('docs/desktop-verification.json', JSON.stringify(report, null, 2) + '\n'); console.log(JSON.stringify(report, null, 2));
 } catch (error) {
+  console.error('Desktop verification failed:', error);
   const page = application?.windows()[0];
   if (page) { await page.screenshot({path:'docs/desktop-failure.png'}).catch(()=>{}); console.error((await page.locator('body').innerText()).slice(-4000)); }
   throw error;

@@ -5,6 +5,11 @@ const fs = require('node:fs');
 const { pathToFileURL } = require('node:url');
 let window, running, ownsServer = false;
 app.setName('LabCanvas');
+if (process.env.LABCANVAS_PROFILE) {
+  const profile = path.resolve(process.env.LABCANVAS_PROFILE);
+  fs.mkdirSync(profile, { recursive: true });
+  app.setPath('userData', profile);
+}
 if (!app.requestSingleInstanceLock()) app.quit();
 else {
   app.on('second-instance', () => { if (window) { if (window.isMinimized()) window.restore(); window.show(); window.focus(); } });

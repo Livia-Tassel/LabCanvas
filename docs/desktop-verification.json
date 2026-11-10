@@ -3,7 +3,7 @@
   "packaged": true,
   "node": "24.15.0",
   "ok": true,
-  "checked_at": "2026-11-10T12:52:07.740Z",
+  "checked_at": "2026-11-10T13:05:14.621Z",
   "checks": [
     "packaged startup",
     "native menu IPC",
@@ -12,7 +12,8 @@
     "XLSX editing",
     "cancel native close with unsaved data",
     "time-based logs",
-    "built-in PDF rendering"
+    "built-in PDF rendering",
+    "compact classification pickers"
   ],
   "page_errors": []
 }

@@ -6,7 +6,7 @@
 
 - `npm run build`：TypeScript 检查与生产构建通过。
 - `npm test`：16 项数据层 / HTTP 测试通过。
-- `npm run test:e2e`：9 项真实浏览器流程通过。
+- `npm run test:e2e`：10 项真实浏览器流程通过。
 - `npm run test:desktop`：对实际打包的 macOS 应用复验通过，详见 [结构化报告](desktop-verification.json)。
 - 安装包使用 ad-hoc 签名；`codesign --verify --deep --strict` 通过；DMG 使用 `hdiutil verify` 检查。
 
@@ -33,3 +33,7 @@
 ## 产品边界
 
 本机单用户版本。表格提供单元格值编辑，保留历史和公式，不在应用内执行 Excel 公式计算或宏。复杂 Excel 功能不承诺完整兼容。单文件最多 100 MB，每批最多 500 MB。没有云同步、论文管理、后台实验调度或永久清空回收站。
+
+## 分类选择器界面修复
+
+修复组合、导入和新建表格弹窗中，复选框被文本输入框样式拉宽的问题。回归用例先在原版本测得 388 px 宽并失败，修复后恢复为 14 px。新增验证覆盖 22 个分类、长分类路径、1500×980 与 900×650 窗口、列表无横向溢出，以及选择分类后的保存结果。实际桌面安装包也通过对应检查，见 [组合弹窗截图](screenshot-group-dialog.png)。

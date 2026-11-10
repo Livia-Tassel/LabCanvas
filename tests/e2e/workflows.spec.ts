@@ -91,3 +91,32 @@ test('group titles work with type filters and date sorting uses experiment time'
   await page.getByRole('button',{name:'清除搜索',exact:true}).click();await page.getByLabel('资料类型',{exact:true}).selectOption('all');await page.getByRole('button',{name:'列表视图',exact:true}).click();
   const rows=page.locator('.list-view tbody tr');await expect(rows).toHaveCount(3);await expect(rows.nth(0)).toContainText('Baseline 比较');await expect(rows.nth(1)).toContainText('独立表格');await expect(rows.nth(2)).toContainText('更早的实验');
 });
+test('classification pickers keep compact checkboxes and fit their dialogs',async({page,request})=>{
+  const root=await(await request.post(`/api/projects/${project}/collections`,{data:{name:`Baseline_${'A'.repeat(70)}`}})).json();
+  await request.post(`/api/projects/${project}/collections`,{data:{name:`缓存模块_${'B'.repeat(70)}`,parent_id:root.id}});
+  for(let i=1;i<=16;i++)await request.post(`/api/projects/${project}/collections`,{data:{name:`分类 ${String(i).padStart(2,'0')}`}});
+  for(const name of ['测试结果二','测试结果三'])await request.post(`/api/projects/${project}/tables`,{data:{name,rows:3,columns:3}});
+  await page.getByRole('button',{name:'刷新资料',exact:true}).click();
+  await page.getByRole('button',{name:'列表视图',exact:true}).click();
+  for(const name of ['独立表格','测试结果二','测试结果三'])await page.getByLabel(`选择 ${name}`,{exact:true}).check();
+  await page.getByRole('button',{name:'组合',exact:true}).click();
+  const inspectPicker=async()=>{
+    const dialog=page.getByRole('dialog'),picker=dialog.getByRole('group',{name:'加入分类',exact:true});
+    await expect(picker.getByRole('checkbox')).toHaveCount(22);
+    const sizes=await picker.locator('input[type="checkbox"]').evaluateAll(inputs=>inputs.map(input=>{const r=input.getBoundingClientRect();return{width:r.width,height:r.height};}));
+    for(const size of sizes){expect(size.width).toBeLessThanOrEqual(24);expect(size.width).toBeGreaterThanOrEqual(12);expect(size.height).toBeLessThanOrEqual(24);}
+    await expect.poll(()=>picker.locator('.collection-checks').evaluate(el=>el.scrollWidth-el.clientWidth)).toBeLessThanOrEqual(1);
+    const controls=await dialog.locator('.dialog-footer').boundingBox(),viewport=page.viewportSize()!;
+    expect(controls!.x).toBeGreaterThanOrEqual(0);expect(controls!.y+controls!.height).toBeLessThanOrEqual(viewport.height);
+    for(const name of ['名称','主预览']){
+      const field=dialog.getByLabel(name,{exact:true});if(await field.count()){const rect=await field.boundingBox();expect(rect!.width).toBeGreaterThan(200);}
+    }
+  };
+  for(const size of [{width:1500,height:980},{width:900,height:650}]){await page.setViewportSize(size);await inspectPicker();}
+  const dialog=page.getByRole('dialog');await dialog.getByRole('checkbox',{name:'分类 16',exact:true}).check();await expect(dialog.getByRole('checkbox',{name:'分类 16',exact:true})).toBeChecked();
+  await test.info().attach('group-classifications',{body:await dialog.screenshot(),contentType:'image/png'});
+  await dialog.getByRole('button',{name:'保存',exact:true}).click();await expect(dialog).toHaveCount(0);
+  const snapshot=await(await request.get(`/api/projects/${project}/snapshot`)).json(),created=snapshot.groups.find((g:{title:string})=>g.title==='结果组合'),chosen=snapshot.collections.find((c:{name:string})=>c.name==='分类 16');expect(created.collectionIds).toContain(chosen.id);
+  await page.getByRole('button',{name:'导入',exact:true}).click();await inspectPicker();await page.getByRole('button',{name:'取消',exact:true}).click();
+  await page.getByRole('button',{name:'新建菜单',exact:true}).click();await page.getByRole('button',{name:'新建表格',exact:true}).click();await inspectPicker();await page.getByRole('button',{name:'取消',exact:true}).click();
+});
