@@ -1,0 +1,80 @@
+{
+  "name": "labcanvas",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Local research data workspace with canvas, collections, and agent imports",
+  "main": "desktop/main.cjs",
+  "bin": {
+    "labcanvas": "cli/labcanvas.mjs"
+  },
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "dev": "node scripts/copy-pdf-assets.mjs && node scripts/dev.mjs",
+    "build": "node scripts/copy-pdf-assets.mjs && tsc -b && vite build",
+    "start": "node server/index.mjs",
+    "desktop": "electron .",
+    "demo": "node cli/labcanvas.mjs demo",
+    "cli": "node cli/labcanvas.mjs",
+    "test": "node --test tests/core.test.mjs tests/api.test.mjs",
+    "test:e2e": "playwright test",
+    "package:mac": "npm run build && electron-builder --mac dir --arm64 && node scripts/package-mac.mjs",
+    "check": "npm run build && npm test",
+    "test:desktop": "node scripts/verify-desktop.mjs"
+  },
+  "dependencies": {
+    "csv-parse": "^6.1.0",
+    "csv-stringify": "^6.6.0",
+    "exceljs": "4.4.0",
+    "express": "^5.1.0",
+    "lucide-react": "^0.468.0",
+    "multer": "^2.0.2",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "sharp": "^0.34.5",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.56.1",
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2",
+    "@vitejs/plugin-react": "^5.1.0",
+    "electron": "^40.0.0",
+    "electron-builder": "^26.0.12",
+    "pdfjs-dist": "^5.7.284",
+    "typescript": "~5.9.3",
+    "vite": "^7.2.2"
+  },
+  "build": {
+    "appId": "local.labcanvas.app",
+    "productName": "LabCanvas",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "server/**/*",
+      "cli/**/*",
+      "desktop/**/*",
+      "examples/**/*",
+      "package.json",
+      "docs/**/*",
+      "README.md"
+    ],
+    "mac": {
+      "category": "public.app-category.productivity",
+      "identity": null,
+      "icon": "desktop/icon.icns"
+    },
+    "asarUnpack": [
+      "node_modules/sharp/**/*",
+      "node_modules/@img/**/*"
+    ]
+  },
+  "author": {
+    "name": "LabCanvas"
+  },
+  "license": "UNLICENSED"
+}

@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "import_key": "example-cache-001",
+  "run": {
+    "title": "缓存延迟对比 · 模拟数据",
+    "occurred_at": "2026-11-10T09:00:00+08:00",
+    "command": "python benchmark.py --config config.json"
+  },
+  "items": [
+    { "key": "table", "path": "results.csv", "title": "缓存延迟", "role": "result", "description": "模拟数据，仅用于测试。" },
+    { "key": "figure", "path": "result.svg", "title": "缓存延迟对比图", "role": "result", "derived_from": ["table"] },
+    { "key": "log", "path": "run.log", "role": "supporting" }
+  ],
+  "groups": [
+    { "key": "comparison", "title": "缓存延迟对比", "members": ["table", "figure"], "primary": "figure", "collections": ["模块测试/缓存", "实验日期/2026-11-10"] }
+  ]
+}

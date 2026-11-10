@@ -1,0 +1,18 @@
+{
+  "version": "1.0.0",
+  "packaged": true,
+  "node": "24.15.0",
+  "ok": true,
+  "checked_at": "2026-11-10T12:52:07.740Z",
+  "checks": [
+    "packaged startup",
+    "native menu IPC",
+    "real image previews",
+    "bundled agent documentation",
+    "XLSX editing",
+    "cancel native close with unsaved data",
+    "time-based logs",
+    "built-in PDF rendering"
+  ],
+  "page_errors": []
+}

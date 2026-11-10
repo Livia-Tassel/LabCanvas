@@ -1,0 +1,20 @@
+export type Project = { id: string; slug: string; name: string; description: string; color: string; is_demo: number; created_at: string };
+export type Collection = { id: string; project_id: string; parent_id: string | null; name: string; path: string };
+export type Source = { source_item_id: string; source_version: number; title: string; current_version: number; deleted_at: string | null; stale: boolean };
+export type Item = {
+  id: string; project_id: string; title: string; kind: 'table'|'image'|'text'|'pdf'|'file';
+  role: 'result'|'supporting'; description: string; occurred_at: string; created_at: string; updated_at: string;
+  current_version: number; deleted_at: string|null; run_id: string|null; original_name: string; size: number;
+  mime: string; sha256: string; collectionIds: string[]; directCollectionIds: string[]; sources: Source[];
+  preview: { status: string; warning?: string; image?: string; width?: number; height?: number; data?: string[][]; totalRows?: number; totalColumns?: number; text?: string };
+};
+export type Group = { id: string; project_id: string; title: string; primary_item_id: string; memberIds: string[]; allMemberIds: string[]; collectionIds: string[]; created_at: string };
+export type Run = { id: string; title: string; occurred_at: string; command: string; itemIds: string[] };
+export type Snapshot = { project: Project; collections: Collection[]; items: Item[]; trash: Item[]; groups: Group[]; runs: Run[] };
+export type Entry = { id: string; title: string; item: Item; group?: Group; members: Item[]; collectionIds: string[] };
+export type Position = { target_id: string; x: number; y: number; width: number };
+export type Viewport = { x: number; y: number; zoom: number };
+export type Layout = { positions: Position[]; viewport: Viewport };
+export type TableData = { sheets: { name: string; rows: number; columns: number }[]; sheet: number; offset: number; colOffset: number; data: string[][]; formulas: Record<string,string>; totalRows: number; totalColumns: number; version: number };
+export type Version = { number: number; size: number; created_at: string; original_name: string };
+export type ModalState = { type: 'project'|'editProject'|'collection'|'editCollection'|'deleteCollection'|'import'|'table'|'group'|'memberships'|'trash'|'remove'|'dissolve'|'help'|'sources'; collection?: Collection; files?: File[]; group?: Group; item?: Item };
