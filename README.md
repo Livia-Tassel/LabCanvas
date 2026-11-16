@@ -6,11 +6,9 @@
 
 ## 打开应用
 
-本次工作区已经构建 macOS Apple Silicon 版本，并安装好 `labcanvas` 终端命令：
+支持 macOS Apple Silicon 桌面版。先按下方说明安装依赖并构建界面，再运行 `npm run desktop`，或双击根目录的 `启动 LabCanvas.command`。
 
-- 双击 `~/Applications/LabCanvas.app`（本次已安装）。
-- 或打开 `release/LabCanvas-1.0.0-arm64.dmg`，将应用拖入 Applications。
-- 或双击根目录的 `启动 LabCanvas.command`。
+需要可安装的应用时，运行 `npm run package:mac`，然后打开生成的 `release/LabCanvas-1.0.0-arm64.dmg`。构建产物不随源码仓库提交。
 
 应用自带运行时，打开 `.app` 不需要运行 npm。首次启动自动建立 AgentFS 示例项目，所有示例数值均为模拟数据。可以从左上角项目菜单新建自己的项目。无需账户或联网。
 
@@ -21,6 +19,8 @@
 要求 Node.js 22.13 或以上版本，建议 Node.js 24 或以上版本。macOS 桌面打包默认面向 Apple Silicon；网页界面可在其他支持 Node 的系统上运行。
 
 ```sh
+git clone https://github.com/Livia-Tassel/LabCanvas.git
+cd LabCanvas
 npm ci
 npm run build
 npm start
