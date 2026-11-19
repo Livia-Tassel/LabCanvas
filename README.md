@@ -6,7 +6,7 @@
 
 ## 打开应用
 
-支持 macOS Apple Silicon 桌面版。先按下方说明安装依赖并构建界面，再运行 `npm run desktop`，或双击根目录的 `启动 LabCanvas.command`。
+支持 macOS Apple Silicon 桌面版。先按下方说明安装依赖并构建界面，再运行 `npm run desktop`，或双击根目录的 `launch-labcanvas.command`。
 
 需要可安装的应用时，运行 `npm run package:mac`，然后打开生成的 `release/LabCanvas-1.0.0-arm64.dmg`。构建产物不随源码仓库提交。
 
