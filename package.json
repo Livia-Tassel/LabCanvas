@@ -18,7 +18,7 @@
     "desktop": "electron .",
     "demo": "node cli/labcanvas.mjs demo",
     "cli": "node cli/labcanvas.mjs",
-    "test": "node --test tests/core.test.mjs tests/api.test.mjs",
+    "test": "node --test tests/*.test.mjs",
     "test:e2e": "playwright test",
     "package:mac": "npm run build && electron-builder --mac dir --arm64 && node scripts/package-mac.mjs",
     "check": "npm run build && npm test",

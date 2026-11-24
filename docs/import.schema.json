@@ -1,177 +1,46 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "LabCanvas 导入清单",
   "type": "object",
+  "required": ["entries"],
   "properties": {
-    "version": {
-      "default": 1,
-      "type": "number",
-      "const": 1
-    },
-    "import_key": {
-      "type": "string",
-      "minLength": 1,
-      "maxLength": 200
-    },
-    "items": {
+    "project": { "type": "string", "minLength": 1 },
+    "entries": {
+      "type": "array",
       "minItems": 1,
-      "maxItems": 200,
-      "type": "array",
       "items": {
         "type": "object",
         "properties": {
-          "key": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 120
-          },
-          "path": {
-            "type": "string",
-            "minLength": 1
-          },
-          "filename": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 255
-          },
-          "title": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 200
-          },
-          "role": {
-            "type": "string",
-            "enum": [
-              "result",
-              "supporting"
-            ]
-          },
-          "description": {
-            "default": "",
-            "type": "string",
-            "maxLength": 100000
-          },
-          "collections": {
-            "default": [],
-            "maxItems": 200,
+          "key": { "type": "string", "minLength": 1, "maxLength": 200 },
+          "title": { "type": "string", "minLength": 1, "maxLength": 200 },
+          "date": { "type": "string", "format": "date" },
+          "note": { "type": "string" },
+          "collections": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+          "link": { "type": "boolean" },
+          "files": {
             "type": "array",
-            "items": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 500
-            }
-          },
-          "derived_from": {
-            "default": [],
             "maxItems": 200,
-            "type": "array",
             "items": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 500
-            }
-          },
-          "occurred_at": {
-            "type": "string"
-          },
-          "metadata": {
-            "default": {},
-            "type": "object",
-            "propertyNames": {
-              "type": "string"
-            },
-            "additionalProperties": {}
-          }
-        },
-        "required": [
-          "key",
-          "path",
-          "description",
-          "collections",
-          "derived_from",
-          "metadata"
-        ],
-        "additionalProperties": false
-      }
-    },
-    "groups": {
-      "default": [],
-      "maxItems": 100,
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "key": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 120
-          },
-          "title": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 200
-          },
-          "members": {
-            "minItems": 2,
-            "maxItems": 200,
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "primary": {
-            "type": "string"
-          },
-          "collections": {
-            "default": [],
-            "maxItems": 200,
-            "type": "array",
-            "items": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 500
+              "oneOf": [
+                { "type": "string", "minLength": 1 },
+                {
+                  "type": "object",
+                  "required": ["path"],
+                  "properties": {
+                    "path": { "type": "string", "minLength": 1 },
+                    "name": { "type": "string", "minLength": 1 },
+                    "source": { "type": "string", "minLength": 1 }
+                  }
+                }
+              ]
             }
           }
         },
-        "required": [
-          "key",
-          "title",
-          "members",
-          "collections"
-        ],
-        "additionalProperties": false
+        "anyOf": [
+          { "required": ["files"], "properties": { "files": { "minItems": 1 } } },
+          { "required": ["key"] }
+        ]
       }
-    },
-    "run": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "title": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 200
-        },
-        "occurred_at": {
-          "type": "string"
-        },
-        "command": {
-          "default": "",
-          "type": "string",
-          "maxLength": 20000
-        }
-      },
-      "required": [
-        "command"
-      ],
-      "additionalProperties": false
     }
-  },
-  "required": [
-    "version",
-    "import_key",
-    "items",
-    "groups"
-  ],
-  "additionalProperties": false
+  }
 }

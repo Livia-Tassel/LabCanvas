@@ -1,20 +1,89 @@
-export type Project = { id: string; slug: string; name: string; description: string; color: string; is_demo: number; created_at: string };
-export type Collection = { id: string; project_id: string; parent_id: string | null; name: string; path: string };
-export type Source = { source_item_id: string; source_version: number; title: string; current_version: number; deleted_at: string | null; stale: boolean };
-export type Item = {
-  id: string; project_id: string; title: string; kind: 'table'|'image'|'text'|'pdf'|'file';
-  role: 'result'|'supporting'; description: string; occurred_at: string; created_at: string; updated_at: string;
-  current_version: number; deleted_at: string|null; run_id: string|null; original_name: string; size: number;
-  mime: string; sha256: string; collectionIds: string[]; directCollectionIds: string[]; sources: Source[];
-  preview: { status: string; warning?: string; image?: string; width?: number; height?: number; data?: string[][]; totalRows?: number; totalColumns?: number; text?: string };
+export type Project = { id: string; slug: string; name: string; created_at: string; entry_count: number };
+
+export type Collection = {
+  id: string;
+  parent_id: string | null;
+  name: string;
+  path: string;
+  position: number;
+  entry_count: number;
 };
-export type Group = { id: string; project_id: string; title: string; primary_item_id: string; memberIds: string[]; allMemberIds: string[]; collectionIds: string[]; created_at: string };
-export type Run = { id: string; title: string; occurred_at: string; command: string; itemIds: string[] };
-export type Snapshot = { project: Project; collections: Collection[]; items: Item[]; trash: Item[]; groups: Group[]; runs: Run[] };
-export type Entry = { id: string; title: string; item: Item; group?: Group; members: Item[]; collectionIds: string[] };
-export type Position = { target_id: string; x: number; y: number; width: number };
+
+export type FileKind = 'table' | 'image' | 'text' | 'pdf' | 'file';
+
+export type Preview = {
+  rows?: string[][];
+  totalRows?: number;
+  totalColumns?: number;
+  sheets?: number;
+  image?: string;
+  width?: number;
+  height?: number;
+  text?: string;
+  error?: string;
+};
+
+export type LabFile = {
+  id: string;
+  entry_id: string;
+  name: string;
+  kind: FileKind;
+  position: number;
+  source_file_id: string | null;
+  /** Version of the source this file was last known to match. */
+  source_version: number | null;
+  version: number;
+  size: number;
+  sha256: string;
+  mime: string;
+  preview: Preview;
+  created_at: string;
+  updated_at: string;
+};
+
+/** A free-form property of an entry, such as an experiment parameter. */
+export type Field = { name: string; value: string };
+
+export type Entry = {
+  id: string;
+  project_id: string;
+  key: string | null;
+  title: string;
+  note: string;
+  date: string;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+  files: LabFile[];
+  collection_ids: string[];
+  fields: Field[];
+};
+
+export type Snapshot = { project: Project; collections: Collection[]; entries: Entry[]; trash: Entry[] };
+
+export type Position = { entry_id: string; x: number; y: number; w: number };
 export type Viewport = { x: number; y: number; zoom: number };
-export type Layout = { positions: Position[]; viewport: Viewport };
-export type TableData = { sheets: { name: string; rows: number; columns: number }[]; sheet: number; offset: number; colOffset: number; data: string[][]; formulas: Record<string,string>; totalRows: number; totalColumns: number; version: number };
-export type Version = { number: number; size: number; created_at: string; original_name: string };
-export type ModalState = { type: 'project'|'editProject'|'collection'|'editCollection'|'deleteCollection'|'import'|'table'|'group'|'memberships'|'trash'|'remove'|'dissolve'|'help'|'sources'; collection?: Collection; files?: File[]; group?: Group; item?: Item };
+/** A text note or a frame drawn on the canvas of one view. */
+export type Annotation = { id: string; kind: 'note' | 'frame'; x: number; y: number; w: number; h: number; text: string };
+export type Layout = { view: string; positions: Position[]; annotations: Annotation[]; viewport: Viewport | null };
+export type SearchHit = { entry_id: string; snippet: string };
+
+export type TableData = {
+  sheets: { name: string; rows: number; columns: number }[];
+  sheet: number;
+  offset: number;
+  rows: string[][];
+  formulas: Record<string, string>;
+  totalRows: number;
+  totalColumns: number;
+  version: number;
+};
+
+export type TableOp =
+  | { type: 'set'; sheet: number; row: number; column: number; value: string }
+  | { type: 'insertRows' | 'deleteRows' | 'insertColumns' | 'deleteColumns'; sheet: number; at: number; count: number };
+
+export type FileVersion = { number: number; size: number; sha256: string; created_at: string; current: boolean };
+
+/** 'all' | 'unfiled' | 'trash' | `collection:${id}` */
+export type ViewKey = string;

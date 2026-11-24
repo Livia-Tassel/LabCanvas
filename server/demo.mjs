@@ -1,86 +1,114 @@
-import path from 'node:path';
-import { promises as fs } from 'node:fs';
-import ExcelJS from 'exceljs';
-import sharp from 'sharp';
+// Builds a small sample project so the interface can be tried without real experiment data.
+// All numbers are synthetic.
+import { stringify } from 'csv-stringify/sync';
 
-function plot(title, subtitle, series, labels, unit = 'k ops/s', mode = 'bar') {
-  const w = 780, h = 450, left = 76, top = 90, cw = 660, ch = 270;
-  const max = Math.ceil(Math.max(...series.flatMap(s => s.values)) / 50) * 50;
-  const colors = ['#a7b0b9', '#477b65', '#89a7c6'];
-  let body = `<rect width="${w}" height="${h}" fill="#f4f5f2"/><text x="36" y="38" font-size="23" font-weight="600">${title}</text><text x="36" y="62" fill="#758078" font-size="13">${subtitle} · SIMULATED DATA</text>`;
-  for (let n = 0; n <= 4; n++) {
-    const y = top + ch - n * ch / 4;
-    body += `<path d="M${left} ${y}H${left + cw}" stroke="#dce1db"/><text x="${left - 12}" y="${y + 4}" text-anchor="end" fill="#7b837d" font-size="12">${Math.round(max * n / 4)}</text>`;
-  }
-  body += `<text x="${left}" y="${top - 14}" fill="#7b837d" font-size="11">${unit}</text>`;
-  const step = cw / labels.length;
-  labels.forEach((label, i) => { body += `<text x="${left + step * (i + .5)}" y="${top + ch + 23}" text-anchor="middle" fill="#657068" font-size="12">${label}</text>`; });
-  series.forEach((s, si) => {
-    if (mode === 'line') {
-      const points = s.values.map((v, i) => `${left + step * (i + .5)},${top + ch - v / max * ch}`);
-      body += `<polyline points="${points.join(' ')}" fill="none" stroke="${colors[si]}" stroke-width="3"/>`;
-      s.values.forEach((v, i) => { body += `<circle cx="${left + step * (i + .5)}" cy="${top + ch - v / max * ch}" r="4" fill="${colors[si]}"/>`; });
-    } else s.values.forEach((v, i) => {
-      const bw = step / (series.length + 1.5), x = left + step * i + step * .15 + si * (bw + 3), bh = v / max * ch;
-      body += `<rect x="${x}" y="${top + ch - bh}" width="${bw}" height="${bh}" rx="2" fill="${colors[si]}"/>`;
-    });
-    body += `<rect x="${left + si * 175}" y="415" width="10" height="10" rx="2" fill="${colors[si]}"/><text x="${left + si * 175 + 18}" y="424" font-size="12" fill="#657068">${s.name}</text>`;
-  });
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" font-family="Arial, sans-serif" fill="#293a30">${body}</svg>`;
+const COLORS = ['#8e8e93', '#2f6fde'];
+
+function frame(title, width, height, body) {
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" font-family="Helvetica, Arial, sans-serif">
+<rect width="100%" height="100%" fill="#fff"/>
+<text x="56" y="30" font-size="15" font-weight="600" fill="#1d1d1f">${title}</text>
+${body}</svg>`;
 }
 
-export async function seedDemo(store, { force = false } = {}) {
-  const old = store.projects().find(p => p.slug === 'agentfs-demo');
-  if (old) return { project: old, existing: true };
-  if (!force && store.one("SELECT value FROM meta WHERE key='demo_initialized'")) return null;
-  const dir = path.join(store.home, 'examples', 'agentfs'); await fs.mkdir(dir, { recursive: true });
-  const workbook = new ExcelJS.Workbook();
-  const sheet = workbook.addWorksheet('吞吐量');
-  sheet.addRows([
-    ['Workload', 'Baseline (k ops/s)', 'AgentFS (k ops/s)', 'Speedup', 'Trials'],
-    ['Sequential read', 183.2, 296.7, 1.62, 5], ['Random read', 96.4, 181.2, 1.88, 5],
-    ['Sequential write', 142.8, 219.3, 1.54, 5], ['Random write', 71.6, 130.9, 1.83, 5],
-    ['Metadata', 115.3, 267.4, 2.32, 5], ['Mixed R/W', 102.1, 189.6, 1.86, 5]
-  ]);
-  sheet.columns.forEach(c => c.width = 24);
-  sheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
-  sheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF477B65' } };
-  workbook.addWorksheet('实验说明').addRows([['说明', '内容'], ['数据性质', '模拟数据，仅用于功能验证'], ['环境', 'Synthetic workload / 5 trials'], ['日期', '2026-11-10']]);
-  await workbook.xlsx.writeFile(path.join(dir, 'throughput.xlsx'));
-  await fs.writeFile(path.join(dir, 'latency.csv'), 'Concurrency,Baseline p50 (ms),AgentFS p50 (ms),Baseline p99 (ms),AgentFS p99 (ms)\n1,2.8,1.9,8.2,4.1\n4,3.2,2.1,10.5,4.9\n8,4.1,2.5,15.7,6.2\n16,6.8,3.4,28.9,8.6\n32,11.2,5.1,52.6,14.3\n64,23.5,8.7,118.4,27.1\n');
-  await fs.writeFile(path.join(dir, 'ablation.csv'), 'Configuration,Throughput (k ops/s),p99 (ms),Memory (MB)\nBaseline,115.3,28.9,192\n+ Metadata cache,189.7,16.2,214\n+ Prefetch,231.8,11.4,236\nFull AgentFS,267.4,8.6,248\n');
-  await fs.writeFile(path.join(dir, 'scaling.csv'), 'Workers,Throughput (k ops/s),CPU (%),Trials\n1,42.1,12,5\n2,81.4,23,5\n4,151.7,44,5\n8,267.4,81,5\n16,308.2,96,5\n');
-  await fs.writeFile(path.join(dir, 'notes.md'), '# 实验记录\n\n本项目中的数值均为模拟数据，用于验证 LabCanvas 功能。\n\n## 本轮检查\n\n- 对比 Baseline 与 AgentFS 的吞吐量和尾延迟。\n- 按模块与实验日期组织同一批结果。\n- 对缓存和预取进行消融测试。\n\n## 后续实验\n\n增加重复次数；记录硬件与配置；检查结果稳定性。\n');
-  await fs.writeFile(path.join(dir, 'run.log'), '[SIMULATED DATA — NOT REAL EXPERIMENT RESULTS]\n2026-11-10T09:00:00+08:00 INFO run=demo-001 workload=synthetic trials=5\n2026-11-10T09:00:01+08:00 INFO baseline started\n2026-11-10T09:01:32+08:00 INFO baseline completed\n2026-11-10T09:01:33+08:00 INFO agentfs started\n2026-11-10T09:03:24+08:00 INFO agentfs completed\n2026-11-10T09:03:25+08:00 INFO results exported\n');
-  await fs.writeFile(path.join(dir, 'config.json'), JSON.stringify({ simulated: true, workload: 'synthetic', trials: 5, workers: [1, 2, 4, 8, 16], seed: 42 }, null, 2));
-  await sharp(Buffer.from(plot('Throughput comparison', 'Baseline vs. AgentFS / 5 trials', [
-    { name: 'Baseline', values: [183.2, 96.4, 142.8, 71.6, 115.3, 102.1] }, { name: 'AgentFS', values: [296.7, 181.2, 219.3, 130.9, 267.4, 189.6] }
-  ], ['Seq. R', 'Rand. R', 'Seq. W', 'Rand. W', 'Metadata', 'Mixed']))).png().toFile(path.join(dir, 'throughput.png'));
-  await sharp(Buffer.from(plot('Tail latency (p99)', 'Concurrent clients / lower is better', [
-    { name: 'Baseline', values: [8.2, 10.5, 15.7, 28.9, 52.6, 118.4] }, { name: 'AgentFS', values: [4.1, 4.9, 6.2, 8.6, 14.3, 27.1] }
-  ], ['1', '4', '8', '16', '32', '64'], 'ms', 'line'))).png().toFile(path.join(dir, 'latency.png'));
-  const manifest = {
-    version: 1, import_key: 'agentfs-simulated-v1',
-    run: { title: 'Baseline / AgentFS 对比 · 模拟运行', occurred_at: '2026-11-10T09:00:00+08:00', command: 'python benchmark.py --config config.json --trials 5  # simulated' },
-    items: [
-      { key: 'throughput', path: 'throughput.xlsx', title: '吞吐量对比', description: '模拟数据 · 6 类工作负载，每组 5 次重复。', role: 'result' },
-      { key: 'throughput-plot', path: 'throughput.png', title: '吞吐量对比图', role: 'result', derived_from: ['throughput'] },
-      { key: 'latency', path: 'latency.csv', title: '并发延迟', description: '模拟数据 · 不同并发度下的 p50 / p99 延迟。', role: 'result' },
-      { key: 'latency-plot', path: 'latency.png', title: '尾延迟曲线', role: 'result', derived_from: ['latency'] },
-      { key: 'ablation', path: 'ablation.csv', title: '缓存与预取消融', role: 'result', collections: ['模块测试/缓存', '实验日期/2026-11-10'] },
-      { key: 'scaling', path: 'scaling.csv', title: '扩展性测试', role: 'result', collections: ['模块测试/并发', '实验日期/2026-11-10'] },
-      { key: 'notes', path: 'notes.md', title: '实验笔记', role: 'result', collections: ['实验日期/2026-11-10'] },
-      { key: 'log', path: 'run.log', title: '运行日志', role: 'supporting' },
-      { key: 'config', path: 'config.json', title: '实验配置', role: 'supporting' }
-    ],
-    groups: [
-      { key: 'throughput-group', title: '吞吐量 · Baseline vs AgentFS', members: ['throughput', 'throughput-plot'], primary: 'throughput-plot', collections: ['基准对比', '实验日期/2026-11-10'] },
-      { key: 'latency-group', title: '延迟 · 并发度对比', members: ['latency', 'latency-plot'], primary: 'latency-plot', collections: ['基准对比', '模块测试/并发', '实验日期/2026-11-10'] }
+function axes(width, height, max, unit) {
+  const lines = [];
+  for (let i = 0; i <= 4; i++) {
+    const y = height - 48 - (i * (height - 104)) / 4;
+    lines.push(`<line x1="56" x2="${width - 24}" y1="${y}" y2="${y}" stroke="#e5e5ea"/>`);
+    lines.push(`<text x="48" y="${y + 4}" font-size="10" text-anchor="end" fill="#6e6e73">${Math.round((max * i) / 4)}</text>`);
+  }
+  lines.push(`<text x="56" y="48" font-size="10" fill="#6e6e73">${unit}</text>`);
+  return lines.join('\n');
+}
+
+function legend(names, x, y) {
+  return names.map((name, i) =>
+    `<rect x="${x + i * 96}" y="${y - 8}" width="9" height="9" fill="${COLORS[i]}"/><text x="${x + 14 + i * 96}" y="${y}" font-size="10" fill="#3a3a3c">${name}</text>`
+  ).join('');
+}
+
+function barChart(title, unit, labels, series, names) {
+  const width = 640, height = 400;
+  const max = Math.ceil(Math.max(...series.flat()) / 50) * 50;
+  const band = (width - 80) / labels.length;
+  const scale = value => ((height - 104) * value) / max;
+  const bars = labels.map((label, i) => {
+    const x = 56 + i * band + band * 0.2;
+    const w = (band * 0.6) / series.length;
+    return series.map((values, s) =>
+      `<rect x="${x + s * w}" y="${height - 48 - scale(values[i])}" width="${w - 2}" height="${scale(values[i])}" fill="${COLORS[s]}"/>`
+    ).join('') + `<text x="${56 + i * band + band / 2}" y="${height - 30}" font-size="10" text-anchor="middle" fill="#3a3a3c">${label}</text>`;
+  }).join('\n');
+  return frame(title, width, height, `${axes(width, height, max, unit)}\n${bars}\n${legend(names, 56, height - 8)}`);
+}
+
+function lineChart(title, unit, labels, series, names) {
+  const width = 640, height = 400;
+  const max = Math.ceil(Math.max(...series.flat()) / 20) * 20;
+  const step = (width - 110) / (labels.length - 1);
+  const point = (value, i) => `${70 + i * step},${height - 48 - ((height - 104) * value) / max}`;
+  const lines = series.map((values, s) =>
+    `<polyline fill="none" stroke="${COLORS[s]}" stroke-width="2" points="${values.map(point).join(' ')}"/>` +
+    values.map((value, i) => `<circle cx="${point(value, i).split(',')[0]}" cy="${point(value, i).split(',')[1]}" r="3" fill="${COLORS[s]}"/>`).join('')
+  ).join('\n');
+  const ticks = labels.map((label, i) => `<text x="${70 + i * step}" y="${height - 30}" font-size="10" text-anchor="middle" fill="#3a3a3c">${label}</text>`).join('');
+  return frame(title, width, height, `${axes(width, height, max, unit)}\n${lines}\n${ticks}\n${legend(names, 56, height - 8)}`);
+}
+
+const csv = rows => Buffer.from(stringify(rows));
+
+export async function seedDemo(store, { name = 'AgentFS 示例' } = {}) {
+  const project = store.createProject({ name });
+  const workloads = ['Seq. read', 'Rand. read', 'Seq. write', 'Rand. write', 'Metadata', 'Mixed'];
+  const baseline = [183.2, 96.4, 142.8, 71.6, 115.3, 102.1];
+  const agentfs = [296.7, 181.2, 219.3, 130.9, 267.4, 189.6];
+  const clients = [1, 4, 8, 16, 32, 64];
+  const p99Base = [8.1, 9.6, 13.4, 24.8, 47.2, 104.5];
+  const p99Ours = [6.2, 6.8, 7.9, 9.7, 14.1, 23.6];
+  const day = '2026-11-10';
+
+  await store.createEntry(project.id, {
+    title: '吞吐量 · Baseline 对比 AgentFS',
+    date: day,
+    note: '示例数据，数值为模拟。6 类负载，各 5 次取平均。',
+    collections: ['实验日期/2026-11-10', '实验目的/自己方法', '实验目的/Baseline', '测试模块/读写路径'],
+    files: [
+      { name: 'throughput.csv', buffer: csv([['Workload', 'Baseline (k ops/s)', 'AgentFS (k ops/s)', 'Speedup', 'Trials'], ...workloads.map((w, i) => [w, baseline[i], agentfs[i], (agentfs[i] / baseline[i]).toFixed(2), 5])]) },
+      { name: 'throughput.svg', buffer: Buffer.from(barChart('Throughput', 'k ops/s', workloads, [baseline, agentfs], ['Baseline', 'AgentFS'])) }
     ]
-  };
-  await fs.writeFile(path.join(dir, 'manifest.json'), JSON.stringify(manifest, null, 2));
-  const p = store.createProject({ name: 'AgentFS', slug: 'agentfs-demo', description: '模拟实验数据，仅用于功能验证。', is_demo: true });
-  const imported = await store.importManifest(p.id, manifest, { baseDir: dir });
-  store.exec("INSERT OR REPLACE INTO meta VALUES ('demo_initialized','1')");
-  return { project: p, import: imported, example_directory: dir };
+  });
+  await store.createEntry(project.id, {
+    title: '尾延迟 · 并发度',
+    date: day,
+    note: '示例数据，数值为模拟。',
+    collections: ['实验日期/2026-11-10', '实验目的/自己方法', '测试模块/并发'],
+    files: [
+      { name: 'latency_p99.csv', buffer: csv([['Clients', 'Baseline p99 (ms)', 'AgentFS p99 (ms)'], ...clients.map((c, i) => [c, p99Base[i], p99Ours[i]])]) },
+      { name: 'latency_p99.svg', buffer: Buffer.from(lineChart('Tail latency (p99)', 'ms', clients, [p99Base, p99Ours], ['Baseline', 'AgentFS'])) },
+      { name: 'latency_speedup.svg', buffer: Buffer.from(barChart('p99 reduction', '%', clients, [p99Base.map((b, i) => Math.round((1 - p99Ours[i] / b) * 100))], ['AgentFS'])) }
+    ]
+  });
+  await store.createEntry(project.id, {
+    title: '缓存与预取消融',
+    date: '2026-11-12',
+    collections: ['实验日期/2026-11-12', '实验目的/自己方法', '测试模块/缓存'],
+    files: [{ name: 'ablation.csv', buffer: csv([['Configuration', 'Throughput (k ops/s)', 'p99 (ms)', 'Memory (MB)'], ['Baseline', 115.3, 28.9, 192], ['+ Metadata cache', 189.4, 16.2, 214], ['+ Prefetch', 231.8, 11.4, 236], ['Full AgentFS', 267.4, 8.6, 248]]) }]
+  });
+  await store.createEntry(project.id, {
+    title: '扩展性测试',
+    date: '2026-11-12',
+    collections: ['实验日期/2026-11-12', '实验目的/Baseline', '测试模块/并发'],
+    files: [{ name: 'scaling.csv', buffer: csv([['Workers', 'Throughput (k ops/s)', 'CPU (%)', 'Trials'], [1, 42.1, 12, 5], [2, 81.4, 23, 5], [4, 151.7, 44, 5], [8, 267.4, 81, 5], [16, 308.2, 96, 5]]) }]
+  });
+  await store.createEntry(project.id, {
+    title: '运行配置与日志',
+    date: '2026-11-12',
+    collections: ['实验日期/2026-11-12'],
+    files: [
+      { name: 'config.yaml', buffer: Buffer.from('workload: mixed\nclients: 32\nduration_s: 120\ncache:\n  metadata: true\n  prefetch: true\nseed: 20261112\n') },
+      { name: 'run.log', buffer: Buffer.from('[00:00:00] start benchmark workload=mixed clients=32\n[00:00:30] warmup done\n[00:02:30] throughput=189.6k ops/s p99=14.1ms\n[00:02:31] finished, results written to results/\n') }
+    ]
+  });
+  return store.project(project.id);
 }
