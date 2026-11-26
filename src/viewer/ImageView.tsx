@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Maximize, Minus, Plus } from 'lucide-react';
 import { rawUrl, thumbnailUrl } from '../api';
 import { clamp, isTyping, modKey, shortcut } from '../util';
+import { Mascot } from '../components/Art';
 import type { ImageFrame, ViewProps } from './shared';
 
 export function ImageView({ file, version, link, primary = false }: ViewProps) {
@@ -116,7 +117,7 @@ export function ImageView({ file, version, link, primary = false }: ViewProps) {
           }}
         />
       </div>
-      {error && <div className="empty-state">无法打开图片，可下载原文件查看</div>}
+      {error && <div className="empty-state"><Mascot mood="oops" /><span>无法打开图片，可下载原文件查看</span></div>}
       {natural && <div className="image-size">{natural.width} × {natural.height}</div>}
       <div className="canvas-controls">
         <button className="icon-button" aria-label="缩小" title={`缩小（${shortcut('-')}）`} disabled={!natural} onClick={() => zoomAt(0.8)}><Minus size={14} /></button>

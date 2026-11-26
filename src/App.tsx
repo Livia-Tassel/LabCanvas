@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ListFilter, PanelRight, Plus, Search, Table, X } from 'lucide-react';
 import { useLab } from './state';
 import { ErrorBoundary, useOverlay } from './components/ui';
+import { Mascot } from './components/Art';
 import { Sidebar } from './components/Sidebar';
 import { Canvas } from './components/Canvas';
 import { ListView } from './components/ListView';
@@ -152,6 +153,7 @@ export function App() {
   if (projects && projects.length === 0) {
     content = (
       <div className="welcome">
+        <Mascot mood="happy" size={132} />
         <p>尚无项目</p>
         <button className="button primary" onClick={() => void actions.createProject()}>新建项目</button>
       </div>
@@ -233,6 +235,7 @@ export function App() {
   } else if (lab.connectionError) {
     content = (
       <div className="welcome">
+        <Mascot mood="oops" />
         <p>{lab.connectionError}</p>
         <button className="button" onClick={() => void lab.refresh().catch(() => {})}>重试</button>
       </div>
@@ -241,7 +244,7 @@ export function App() {
 
   return (
     <div
-      className="app"
+      className={snapshot ? 'app' : 'app single-pane'}
       onDragOver={event => {
         // Files dropped anywhere outside the canvas are added too, instead of the window navigating to them.
         if (!hasFiles(event)) return;

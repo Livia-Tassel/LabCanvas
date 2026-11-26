@@ -5,6 +5,7 @@ import { useLab } from '../state';
 import { useOverlay } from './ui';
 import { useEntryMenu } from './entryMenu';
 import { EntryCard, defaultCardWidth } from './EntryCard';
+import { Mascot } from './Art';
 import { clamp, droppedFiles, isTyping, modKey, shortId, shortcut } from '../util';
 import type { Annotation, Entry, Layout, Viewport } from '../types';
 
@@ -875,7 +876,10 @@ export function Canvas() {
       </div>
       {marquee && <div className="marquee" style={marquee} />}
       {ready && entries.length === 0 && annotations.length === 0 && (
-        <div className="empty-state">{lab.query || lab.kinds.length ? '没有匹配的条目' : '没有条目。将文件拖到此处即可添加。'}</div>
+        <div className="empty-state">
+          <Mascot mood={lab.query || lab.kinds.length ? 'search' : 'happy'} />
+          <span>{lab.query || lab.kinds.length ? '没有匹配的条目' : '没有条目。将文件拖到此处即可添加。'}</span>
+        </div>
       )}
       <div className="canvas-tools" onDoubleClick={event => event.stopPropagation()}>
         <button className="icon-button" aria-label="添加便签" title="添加便签" onClick={() => addNote('note')}><StickyNote size={14} /></button>

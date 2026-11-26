@@ -2,6 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Plus, Redo2, Search, Undo2 } from 'lucide-react';
 import { api, send } from '../api';
 import { useOverlay } from '../components/ui';
+import { Mascot } from '../components/Art';
 import { clamp, columnName, isTyping, modKey, shortcut } from '../util';
 import { FindBar, findIsFor, useScrollSync } from './shared';
 import type { ViewProps } from './shared';
@@ -743,8 +744,8 @@ export function TableView({ file, version: pinned, readOnly: locked = false, onD
     overlay.menu({ x: event.clientX, y: event.clientY }, groups.filter(items => items.length).flatMap((items, index) => (index ? ['separator' as const, ...items] : items)));
   };
 
-  if (error) return <div className="viewer-message">{error}</div>;
-  if (!meta) return <div className="viewer-message">正在载入…</div>;
+  if (error) return <div className="viewer-message"><Mascot mood="oops" /><span>{error}</span></div>;
+  if (!meta) return <div className="viewer-message"><Mascot mood="bubbling" size={76} /><span>正在载入…</span></div>;
 
   const lead = frozen ? 1 : 0;
   const first = Math.max(lead, Math.floor(scroll.top / ROW_HEIGHT) - OVERSCAN);
@@ -863,7 +864,7 @@ export function TableView({ file, version: pinned, readOnly: locked = false, onD
         }}
         onContextMenu={onContextMenu}
       >
-        {loading ? <div className="empty-state">正在载入…</div> : <div className="grid-canvas" style={{ width: GUTTER + totalWidth, height: HEADER_HEIGHT + rowCount * ROW_HEIGHT }}>
+        {loading ? <div className="empty-state"><Mascot mood="bubbling" size={76} /><span>正在载入…</span></div> : <div className="grid-canvas" style={{ width: GUTTER + totalWidth, height: HEADER_HEIGHT + rowCount * ROW_HEIGHT }}>
           <div className="grid-header" style={{ width: GUTTER + totalWidth }}>
             <div className="grid-letters">
               <div className="grid-corner" style={{ width: GUTTER }} />
@@ -893,14 +894,14 @@ export function TableView({ file, version: pinned, readOnly: locked = false, onD
         </div>}
       </div>
       <div className="table-status">
-        <div className="sheet-tabs">
+        <div className="sheet-tabs scrollable">
           {meta.sheets.length > 1 && meta.sheets.map((item, index) => (
             <button key={index} disabled={loading || saving} className={index === sheet ? 'active' : undefined} onClick={() => switchSheet(index)}>{item.name}</button>
           ))}
         </div>
-        <span>{meta.totalRows > LOAD_LIMIT ? `第 ${meta.offset + 1}–${meta.offset + rowCount} 行 / 共 ${meta.totalRows} 行 · 只读` : `${rowCount} 行 × ${grid.columns} 列${fixed ? ' · 只读' : ''}`}</span>
+        <span className="status-detail">{meta.totalRows > LOAD_LIMIT ? `第 ${meta.offset + 1}–${meta.offset + rowCount} 行 / 共 ${meta.totalRows} 行 · 只读` : `${rowCount} 行 × ${grid.columns} 列${fixed ? ' · 只读' : ''}`}</span>
         {meta.totalRows > LOAD_LIMIT && (
-          <div className="sheet-tabs">
+          <div className="status-group">
             <button className="icon-button small" aria-label="上一页" disabled={!meta.offset || loading} onClick={() => movePage(meta.offset - LOAD_LIMIT)}><ChevronLeft size={13} /></button>
             <button className="icon-button small" aria-label="下一页" disabled={meta.offset + rowCount >= meta.totalRows || loading} onClick={() => movePage(meta.offset + LOAD_LIMIT)}><ChevronRight size={13} /></button>
           </div>
@@ -918,7 +919,7 @@ export function TableView({ file, version: pinned, readOnly: locked = false, onD
         )}
         {dirty && <span className="unsaved">有未保存的修改</span>}
         <span className="spacer" />
-        {summary && <span className="selectable">求和 {formatNumber(summary.sum)} · 平均 {formatNumber(summary.mean)} · 计数 {summary.count}</span>}
+        {summary && <span className="status-detail selectable">求和 {formatNumber(summary.sum)} · 平均 {formatNumber(summary.mean)} · 计数 {summary.count}</span>}
         <button
           className={`status-toggle${prefs.frozen ? ' active' : ''}`}
           aria-pressed={prefs.frozen}

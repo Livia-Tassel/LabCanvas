@@ -6,6 +6,7 @@ import type { ViewerState } from '../state';
 import { useOverlay } from '../components/ui';
 import type { MenuItem } from '../components/ui';
 import { KindIcon } from '../components/FilePreview';
+import { Mascot } from '../components/Art';
 import { TableView } from './TableView';
 import { ImageView } from './ImageView';
 import { TextView } from './TextView';
@@ -23,7 +24,7 @@ function FileBody(props: ViewProps) {
   if (file.kind === 'pdf') return <PdfView {...props} />;
   return (
     <div className="viewer-message">
-      <KindIcon kind="file" size={32} />
+      <Mascot mood="search" />
       <span>{file.name} · {formatBytes(file.size)}</span>
       <span className="muted">此类型的文件无法在应用内预览</span>
       <a className="button" href={rawUrl({ id: file.id, version: version ?? file.version }, true)}>下载</a>

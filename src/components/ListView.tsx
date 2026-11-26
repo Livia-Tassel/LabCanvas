@@ -4,6 +4,7 @@ import { useLab } from '../state';
 import { useOverlay } from './ui';
 import { useEntryMenu } from './entryMenu';
 import { KindIcon } from './FilePreview';
+import { Mascot } from './Art';
 import { ENTRY_DRAG } from './Sidebar';
 import { formatBytes, formatDateTime, isTyping, modKey } from '../util';
 import type { Entry } from '../types';
@@ -210,7 +211,7 @@ export function ListView() {
                 }}
               >
                 <td className="col-title">
-                  {entry.files.length > 1 ? <Layers size={14} strokeWidth={1.6} className="kind-icon" /> : <KindIcon kind={entry.files[0]?.kind ?? 'file'} />}
+                  {entry.files.length > 1 ? <Layers size={14} strokeWidth={1.9} className="kind-icon" /> : <KindIcon kind={entry.files[0]?.kind ?? 'file'} />}
                   <span>{entry.title}</span>
                   {stale && <span className="row-stale" title="其中的图表来源已有新版本">来源已更新</span>}
                   {snippet && <span className="row-snippet">{snippet}</span>}
@@ -221,7 +222,12 @@ export function ListView() {
           })}
         </tbody>
       </table>
-      {sorted.length === 0 && <div className="empty-state static">{filtered ? '没有匹配的条目' : lab.view === 'trash' ? '回收站为空' : '没有条目'}</div>}
+      {sorted.length === 0 && (
+        <div className="empty-state static">
+          <Mascot mood={filtered ? 'search' : lab.view === 'trash' ? 'sleepy' : 'happy'} />
+          <span>{filtered ? '没有匹配的条目' : lab.view === 'trash' ? '回收站为空' : '没有条目'}</span>
+        </div>
+      )}
     </div>
   );
 }

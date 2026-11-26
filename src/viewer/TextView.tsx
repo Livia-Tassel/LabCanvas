@@ -2,6 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { ChevronDown, ChevronUp, Search } from 'lucide-react';
 import { api, send } from '../api';
 import { useOverlay } from '../components/ui';
+import { Mascot } from '../components/Art';
 import { clamp, formatBytes, modKey, shortcut } from '../util';
 import { FindBar, diffLines, findIsFor, useScrollSync } from './shared';
 import type { ViewProps } from './shared';
@@ -223,8 +224,11 @@ export function TextView({ file, version: pinned, readOnly: locked = false, onDi
     };
   }, [primary]);
 
-  if (error) return <div className="viewer-message">{error}</div>;
-  if (!data) return <div className="viewer-message">正在载入…</div>;
+  if (error) return <div className="viewer-message"><Mascot mood="oops" /><span>{error}</span></div>;
+  if (!data) return <div className="viewer-message"><Mascot mood="bubbling" size={76} /><span>正在载入…</span></div>;
+  const status = data.truncated
+    ? `文件共 ${formatBytes(data.size)}，显示${data.tail ? '末尾' : '开头'} 2 MB，不可编辑`
+    : `${lineCount} 行${!editable ? ' · 只读' : ''}`;
 
   const firstLine = clamp(Math.floor((scroll.top - PAD) / LINE), 0, lineCount - 1);
   const lastLine = clamp(Math.ceil((scroll.top + scroll.height - PAD) / LINE), 0, lineCount - 1);
@@ -297,11 +301,7 @@ export function TextView({ file, version: pinned, readOnly: locked = false, onDi
         </div>
       </div>
       <div className="table-status">
-        <span>
-          {data.truncated
-            ? `文件共 ${formatBytes(data.size)}，显示${data.tail ? '末尾' : '开头'} 2 MB，不可编辑`
-            : `${lineCount} 行${!editable ? ' · 只读' : ''}`}
-        </span>
+        <span className="status-detail" title={status}>{status}</span>
         {data.truncated && (
           <div className="sheet-tabs" role="group" aria-label="显示的部分">
             <button className={!tail ? 'active' : undefined} onClick={() => setTail(false)}>开头</button>

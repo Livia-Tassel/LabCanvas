@@ -2,6 +2,7 @@ import { useMemo, useRef, useState } from 'react';
 import { ChevronDown, ChevronRight, ChevronsUpDown, CircleHelp, Folder, FolderOpen, Inbox, Library, MoreHorizontal, Plus, Trash2 } from 'lucide-react';
 import { useLab } from '../state';
 import { useOverlay } from './ui';
+import { MascotMark } from './Art';
 import { buildTree, descendants, flattenTree } from '../util';
 import type { CollectionNode } from '../util';
 
@@ -57,7 +58,7 @@ export function Sidebar() {
     return counts;
   }, [lab.nested, snapshot]);
 
-  if (!snapshot || !projects) return <aside className="sidebar" />;
+  if (!snapshot || !projects) return null;
   const project = snapshot.project;
 
   const toggle = (id: string) => {
@@ -145,17 +146,18 @@ export function Sidebar() {
     <aside className="sidebar" inert={!!lab.viewer}>
       <div className="sidebar-header">
         <button className="project-switch" onClick={projectMenu} title="切换项目">
+          <MascotMark />
           <span className="project-name">{project.name}</span>
           <ChevronsUpDown size={13} />
         </button>
       </div>
       <nav className="sidebar-scroll" aria-label="分类">
         <button className={`nav-row${view === 'all' ? ' active' : ''}`} aria-current={view === 'all' ? 'page' : undefined} onClick={() => setView('all')}>
-          <span className="nav-indent" /><Library size={15} strokeWidth={1.7} />
+          <span className="nav-indent" /><Library size={15} strokeWidth={1.9} />
           <span className="nav-label">全部条目</span><span className="nav-count">{snapshot.entries.length}</span>
         </button>
         <button className={`nav-row${view === 'unfiled' ? ' active' : ''}`} aria-current={view === 'unfiled' ? 'page' : undefined} onClick={() => setView('unfiled')}>
-          <span className="nav-indent" /><Inbox size={15} strokeWidth={1.7} />
+          <span className="nav-indent" /><Inbox size={15} strokeWidth={1.9} />
           <span className="nav-label">未分类</span><span className="nav-count">{unfiled || ''}</span>
         </button>
 
@@ -224,7 +226,7 @@ export function Sidebar() {
               >
                 {node.children.length > 0 && (open ? <ChevronDown size={12} /> : <ChevronRight size={12} />)}
               </span>
-              <FolderIcon size={15} strokeWidth={1.7} />
+              <FolderIcon size={15} strokeWidth={1.9} />
               {renaming === node.id ? (
                 <input
                   className="nav-rename"
@@ -256,7 +258,7 @@ export function Sidebar() {
       </nav>
       <div className="sidebar-footer">
         <button className={`nav-row${view === 'trash' ? ' active' : ''}`} data-drop-trash onClick={() => setView('trash')}>
-          <span className="nav-indent" /><Trash2 size={15} strokeWidth={1.7} />
+          <span className="nav-indent" /><Trash2 size={15} strokeWidth={1.9} />
           <span className="nav-label">回收站</span><span className="nav-count">{snapshot.trash.length || ''}</span>
         </button>
         <button

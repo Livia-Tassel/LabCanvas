@@ -228,9 +228,22 @@ test('紧凑窗口保留工具栏操作，查看器焦点不进入工作区', as
   const toolbar = page.locator('.toolbar');
   const overflow = () => toolbar.evaluate(node => node.scrollWidth - node.clientWidth);
   expect(await overflow()).toBeLessThanOrEqual(1);
+  const heading = toolbar.getByRole('heading', { name: '全部条目' });
+  expect(await heading.evaluate(node => node.scrollWidth - node.clientWidth)).toBe(0);
   await page.setViewportSize({ width: 961, height: 600 });
   expect(await overflow()).toBeLessThanOrEqual(1);
   await page.setViewportSize({ width: 800, height: 600 });
+  await page.getByRole('button', { name: '帮助与资料库' }).click();
+  await page.getByRole('menuitem', { name: '键盘快捷键' }).click();
+  const shortcuts = page.getByRole('dialog', { name: '键盘快捷键' });
+  const shortcutList = shortcuts.getByRole('region', { name: '快捷键列表' });
+  await expect(shortcuts).toBeFocused();
+  expect(await shortcutList.evaluate(node => node.scrollTop)).toBe(0);
+  await page.keyboard.press('Tab');
+  await expect(shortcutList).toBeFocused();
+  await page.keyboard.press('End');
+  await expect.poll(() => shortcutList.evaluate(node => node.scrollTop)).toBeGreaterThan(0);
+  await shortcuts.getByRole('button', { name: '关闭', exact: true }).click();
   await page.getByRole('button', { name: '详情面板' }).click();
   await page.getByRole('tab', { name: '列表' }).click();
   await page.getByRole('row', { name: /^延迟/ }).dblclick();
@@ -332,6 +345,31 @@ test('CLI 开窗时导入和更新，预览 PDF 并打开文本和其他文件',
   expect(path.basename((await download).suggestedFilename())).toBe('原始数据.bin');
   await page.getByRole('tab', { name: '记录.log' }).click();
   await expect(page.getByRole('textbox', { name: '记录.log' })).toHaveValue('已复核');
+});
+
+test('紧凑窗口对比大日志时仍可切换开头和末尾', async ({ page, request }) => {
+  await page.setViewportSize({ width: 800, height: 600 });
+  const project = await workspace(page, request, '大日志对比');
+  const lines = ('0123456789abcdef'.repeat(4096) + '\n').repeat(33);
+  const log = (beginning: string, ending: string) => ({
+    name: '运行.log', mimeType: 'text/plain', buffer: Buffer.from(`${beginning}\n${lines}${ending}\n`)
+  });
+  await chooseFiles(page, log('首版', '首版结束'));
+  await expect(page.locator('.card-title')).toHaveText('运行');
+  const snapshot = await (await request.get(`/api/projects/${project.id}/snapshot`)).json();
+  const file = snapshot.entries[0].files[0];
+  const replaced = await request.post(`/api/files/${file.id}/replace`, { multipart: { files: log('新版', '新版结束') } });
+  expect(replaced.ok()).toBeTruthy();
+  await page.locator('.card-title').dblclick();
+  await page.getByRole('button', { name: '版本记录' }).click();
+  await page.getByRole('menuitem', { name: '与上一版并排对比' }).click();
+  await expect(page.locator('.compare-pane .differs')).toHaveCount(2);
+  for (const pane of await page.locator('.compare-pane').all()) {
+    await pane.getByRole('button', { name: '末尾', exact: true }).click();
+    await expect(pane.locator('.status-detail')).toContainText('显示末尾');
+    await pane.getByRole('button', { name: '开头', exact: true }).click();
+    await expect(pane.locator('.status-detail')).toContainText('显示开头');
+  }
 });
 
 test('大型表格可翻页查看全部行', async ({ page, request }) => {

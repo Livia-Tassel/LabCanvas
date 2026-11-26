@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu, shell, dialog } = require('electron');
+const { app, BrowserWindow, Menu, shell, dialog, nativeTheme } = require('electron');
 const path = require('node:path');
 const os = require('node:os');
 const fs = require('node:fs');
@@ -29,7 +29,7 @@ else {
       }
       fs.writeFileSync(path.join(home, 'desktop-server.json'), JSON.stringify({ url: running.url, pid: process.pid }), { mode: 0o600 });
       const makeWindow = () => {
-        window = new BrowserWindow({ width: 1500, height: 980, minWidth: 800, minHeight: 600, title: 'LabCanvas', backgroundColor: '#181818', titleBarStyle: 'hiddenInset', trafficLightPosition: { x: 17, y: 15 }, show: false,
+        window = new BrowserWindow({ width: 1500, height: 980, minWidth: 800, minHeight: 600, title: 'LabCanvas', backgroundColor: nativeTheme.shouldUseDarkColors ? '#241a20' : '#fffafb', titleBarStyle: 'hiddenInset', trafficLightPosition: { x: 17, y: 15 }, show: false,
           webPreferences: { preload: path.join(__dirname, 'preload.cjs'), nodeIntegration: false, contextIsolation: true, sandbox: true, additionalArguments: [`--labcanvas-version=${VERSION}`] } });
         window.webContents.setWindowOpenHandler(({ url }) => { if (url.startsWith(`${running.url}/`)) void shell.openExternal(url); return { action: 'deny' }; });
         window.webContents.on('will-navigate', (event, url) => { if (!url.startsWith(`${running.url}/`)) event.preventDefault(); });

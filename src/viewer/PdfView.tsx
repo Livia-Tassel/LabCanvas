@@ -4,6 +4,7 @@ import type { PDFDocumentProxy } from 'pdfjs-dist';
 import { rawUrl } from '../api';
 import { openPdf, renderPage } from '../pdf';
 import { clamp, isTyping, modKey, shortcut } from '../util';
+import { Mascot } from '../components/Art';
 import { useScrollSync } from './shared';
 import type { ViewProps } from './shared';
 
@@ -142,8 +143,8 @@ export function PdfView({ file, version, group, primary = false }: ViewProps) {
   return (
     <div className="pdf-view">
       <div ref={scroller} className="pdf-scroll" tabIndex={0} onScroll={onScroll}>
-        {error && <div className="viewer-message">{error}</div>}
-        {!error && !document && <div className="viewer-message">正在载入…</div>}
+        {error && <div className="viewer-message"><Mascot mood="oops" /><span>{error}</span></div>}
+        {!error && !document && <div className="viewer-message"><Mascot mood="bubbling" size={76} /><span>正在载入…</span></div>}
         {document && width > 0 && Array.from({ length: document.numPages }, (_, index) => (
           <Page key={`${index}:${width}`} document={document} number={index + 1} width={width} ratio={ratio} root={scroller.current} />
         ))}

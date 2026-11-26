@@ -3,6 +3,7 @@ import { MoreHorizontal, Plus, TriangleAlert, X } from 'lucide-react';
 import { rawUrl } from '../api';
 import { useLab } from '../state';
 import { useOverlay } from './ui';
+import { Mascot } from './Art';
 import { KindIcon, fileMeta } from './FilePreview';
 import { formatDateTime } from '../util';
 import type { Entry, LabFile } from '../types';
@@ -281,7 +282,7 @@ export function Inspector() {
   const entries = selection.map(id => lab.entryById.get(id)).filter(entry => entry !== undefined);
   let content;
   if (entries.length === 0) {
-    content = <div className="inspector-empty">未选择条目</div>;
+    content = <div className="inspector-empty"><Mascot mood="sleepy" size={84} /><span>未选择条目</span></div>;
   } else if (view === 'trash') {
     content = (
       <div className="inspector-multi">

@@ -29,7 +29,7 @@ function HelpDialog({ onClose }: { onClose: () => void }) {
       <DialogActions>
         <button className="button" onClick={() => { onClose(); void actions.backup(); }}>备份资料库…</button>
         <span className="spacer" />
-        <button className="button primary" autoFocus onClick={onClose}>关闭</button>
+        <button className="button primary" onClick={onClose}>关闭</button>
       </DialogActions>
     </Dialog>
   );
@@ -93,8 +93,8 @@ const SHORTCUTS: { title: string; items: [string, string][] }[] = [
 
 function ShortcutsDialog({ onClose }: { onClose: () => void }) {
   return (
-    <Dialog title="键盘快捷键" onClose={onClose} width={640}>
-      <div className="shortcut-groups">
+    <Dialog title="键盘快捷键" onClose={onClose} width={640} className="shortcut-dialog">
+      <div className="shortcut-groups" role="region" aria-label="快捷键列表" tabIndex={0}>
         {SHORTCUTS.map(group => (
           <section key={group.title}>
             <h2>{group.title}</h2>
@@ -107,7 +107,7 @@ function ShortcutsDialog({ onClose }: { onClose: () => void }) {
         ))}
       </div>
       <DialogActions>
-        <button className="button primary" autoFocus onClick={onClose}>关闭</button>
+        <button className="button primary" onClick={onClose}>关闭</button>
       </DialogActions>
     </Dialog>
   );

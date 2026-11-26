@@ -7,7 +7,7 @@ import type { FileKind, LabFile } from '../types';
 
 export function KindIcon({ kind, size = 14 }: { kind: FileKind; size?: number }) {
   const Icon = { table: FileSpreadsheet, image: ImageIcon, text: FileText, pdf: FileType, file: FileIcon }[kind];
-  return <Icon size={size} strokeWidth={1.6} className={`kind-icon kind-${kind}`} />;
+  return <Icon size={size} strokeWidth={1.9} className={`kind-icon kind-${kind}`} />;
 }
 
 export function fileMeta(file: LabFile) {

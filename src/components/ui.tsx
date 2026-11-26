@@ -1,6 +1,7 @@
 import { Component, createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Check, X } from 'lucide-react';
+import { Mascot } from './Art';
 
 export type MenuItem =
   | { label: string; onSelect: () => void; shortcut?: string; danger?: boolean; disabled?: boolean; checked?: boolean }
@@ -143,7 +144,7 @@ function MenuView({ state, onClose }: { state: MenuState; onClose: () => void })
 
 const FOCUSABLE = 'button:not(:disabled), input:not(:disabled), textarea:not(:disabled), select:not(:disabled), a[href], [tabindex]:not([tabindex="-1"])';
 
-export function Dialog({ title, children, onClose, width = 420 }: { title: string; children: ReactNode; onClose: () => void; width?: number }) {
+export function Dialog({ title, children, onClose, width = 420, className }: { title: string; children: ReactNode; onClose: () => void; width?: number; className?: string }) {
   const ref = useRef<HTMLDivElement>(null);
   useRestoreFocus();
   useEffect(() => {
@@ -170,7 +171,7 @@ export function Dialog({ title, children, onClose, width = 420 }: { title: strin
   };
   return (
     <div className="overlay-backdrop dim" onPointerDown={event => { if (event.target === event.currentTarget) onClose(); }}>
-      <div ref={ref} className="dialog" role="dialog" aria-modal="true" aria-label={title} tabIndex={-1} style={{ width }} onKeyDown={onKeyDown}>
+      <div ref={ref} className={className ? `dialog ${className}` : 'dialog'} role="dialog" aria-modal="true" aria-label={title} tabIndex={-1} style={{ width }} onKeyDown={onKeyDown}>
         <div className="dialog-title">{title}</div>
         {children}
       </div>
@@ -283,6 +284,7 @@ export class ErrorBoundary extends Component<{ children: ReactNode; onReset?: ()
     const { onReset } = this.props;
     return (
       <div className="welcome crash" role="alert">
+        <Mascot mood="oops" />
         <p>界面出现错误，资料库中的数据不受影响。</p>
         <p className="muted selectable">{this.state.error.message}</p>
         {onReset
