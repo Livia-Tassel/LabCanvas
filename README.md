@@ -86,7 +86,7 @@ LabCanvas 为这一工作流提供了一套完整且克制的本地基础设施�
 ### 环境要求
 
 - **Node.js** `>= 22.13.0`（使用内置 `node:sqlite`，推荐使用 Node.js 24 LTS）
-- **操作系统**：macOS（完整支持桌面打包与 `.command` 启动器）；浏览器模式与 CLI 支持 macOS / Linux / Windows
+- **操作系统**：macOS（完整支持桌面打包与 `.command` 启动器）与 Windows（提供 x64 安装包）；浏览器模式与 CLI 支持 macOS / Linux / Windows
 
 ### 从源码安装与运行
 
@@ -112,6 +112,9 @@ npm run desktop
 | **开发模式（热重载）** | `npm run dev` | 同时启动 Vite 开发服务器与本地 API 服务 |
 | **导入演示项目** | `npm run demo` | 在当前资料库中生成模拟的 AgentFS 实验数据 |
 | **打包 macOS 应用** | `npm run package:mac` | 生成 Apple Silicon 安装镜像 `release/LabCanvas-1.0.0-arm64.dmg` |
+| **打包 Windows 应用** | `npm run package:win` | 生成 x64 安装包 `release/LabCanvas-1.0.0-x64-setup.exe`（在 macOS/Linux 上跨平台打包需安装 wine） |
+
+Windows 用户也可以直接从 [GitHub Releases](https://github.com/Livia-Tassel/LabCanvas/releases) 下载 `LabCanvas-1.0.0-x64-setup.exe`，双击按提示安装即可；安装包自带 Node 运行时，无需预装环境。
 
 > [!NOTE]
 > 默认资料库位于 `~/.labcanvas`。设置环境变量 `LABCANVAS_HOME=/path/to/dir` 可在桌面端、Web 端与 CLI 间切换至任意独立资料库目录。

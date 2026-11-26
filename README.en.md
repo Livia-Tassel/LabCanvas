@@ -86,7 +86,7 @@ LabCanvas provides a focused, local-first foundation built around how experiment
 ### Prerequisites
 
 - **Node.js** `>= 22.13.0` (uses built-in `node:sqlite`; Node.js 24 LTS recommended)
-- **Platform**: macOS for packaged desktop builds and `.command` launcher; Web mode and CLI run on macOS, Linux, and Windows
+- **Platform**: macOS and Windows (both have packaged desktop installers); Web mode and CLI run on macOS, Linux, and Windows
 
 ### Install & Run from Source
 
@@ -112,6 +112,9 @@ Additional launch options:
 | **Development Mode** | `npm run dev` | Starts Vite HMR dev server alongside the local API server |
 | **Seed Demo Data** | `npm run demo` | Populates a simulated AgentFS project in the active library |
 | **Package for macOS** | `npm run package:mac` | Builds an Apple Silicon disk image at `release/LabCanvas-1.0.0-arm64.dmg` |
+| **Package for Windows** | `npm run package:win` | Builds an x64 installer at `release/LabCanvas-1.0.0-x64-setup.exe` (requires wine when cross-packaging from macOS/Linux) |
+
+Windows users can also grab `LabCanvas-1.0.0-x64-setup.exe` directly from [GitHub Releases](https://github.com/Livia-Tassel/LabCanvas/releases); the installer bundles the Node runtime, so no prerequisites are needed.
 
 > [!NOTE]
 > By default, LabCanvas stores its library in `~/.labcanvas`. Set `LABCANVAS_HOME=/path/to/dir` to point the desktop app, web server, and CLI at any custom library directory.
